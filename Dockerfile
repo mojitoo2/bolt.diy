@@ -3,22 +3,20 @@ FROM ${BASE} AS base
 
 WORKDIR /app
 
-# Install dependencies (this step is cached as long as the dependencies don't change)
+# Install dependencies
 COPY package.json pnpm-lock.yaml ./
-
-# Install corepack and enable pnpm to match Nixpacks
 RUN npm install -g corepack@0.24.1 && corepack enable && pnpm install --frozen-lockfile
 
-# Copy the rest of your app's source code
+# Copy the rest of the app's source code
 COPY . .
 
-# Expose the port the app runs on
+# Expose the port
 EXPOSE 5173
 
 # Production image
 FROM base AS bolt-ai-production
 
-# Define environment variables with default values or let them be overridden
+# Define environment variables
 ARG GROQ_API_KEY
 ARG HuggingFace_API_KEY
 ARG OPENAI_API_KEY
@@ -49,14 +47,14 @@ ENV WRANGLER_SEND_METRICS=false \
     DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
     RUNNING_IN_DOCKER=true \
     NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin \
-    NODE_OPTIONS=--max-old-space-size=8192
+    NODE_OPTIONS=--max-old-space-size=12288
 
-# Pre-configure wrangler to disable metrics
+# Pre-configure wrangler
 RUN mkdir -p /root/.config/.wrangler && \
     echo '{"enabled":false}' > /root/.config/.wrangler/metrics.json
 
-# Build with increased memory limit
-RUN NODE_OPTIONS=--max-old-space-size=8192 pnpm run build
+# Build with increased memory
+RUN NODE_OPTIONS=--max-old-space-size=12288 pnpm run build
 
 CMD ["pnpm", "run", "dockerstart"]
 
@@ -92,7 +90,7 @@ ENV GROQ_API_KEY=${GROQ_API_KEY} \
     DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
     RUNNING_IN_DOCKER=true \
     NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin \
-    NODE_OPTIONS=--max-old-space-size=8192
+    NODE_OPTIONS=--max-old-space-size=12288
 
 RUN mkdir -p /app/run
 CMD pnpm run dev --host
