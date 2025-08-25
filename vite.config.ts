@@ -15,22 +15,22 @@ export default defineConfig((config) => {
     },
     build: {
       target: 'esnext',
-      sourcemap: false, // Disable sourcemaps to reduce memory usage
+      sourcemap: false,
       rollupOptions: {
-        maxParallelFileOps: 2, // Limit parallel operations to reduce memory
-        cache: false, // Disable cache for clean builds
+        maxParallelFileOps: 2,
+        cache: false,
       },
     },
     plugins: [
       nodePolyfills({
-        include: ['buffer', 'process', 'util', 'stream', 'path'], // Includes path for istextorbinary
+        include: ['buffer', 'process', 'util', 'stream', 'path'],
         globals: {
           Buffer: true,
           process: true,
           global: true,
         },
         protocolImports: true,
-        exclude: ['child_process', 'fs'], // Exclude unnecessary modules
+        exclude: ['child_process', 'fs'],
       }),
       {
         name: 'buffer-polyfill',
@@ -51,10 +51,10 @@ export default defineConfig((config) => {
           v3_relativeSplatPath: true,
           v3_throwAbortReason: true,
           v3_lazyRouteDiscovery: true,
+          v3_singleFetch: true,
         },
-        // Ensure production JSX runtime
         ssr: {
-          noExternal: ['react', 'react-dom', '@remix-run/react'], // Prevent externalizing React modules
+          noExternal: ['react', 'react-dom', '@remix-run/react'],
         },
       }),
       UnoCSS(),
@@ -78,23 +78,19 @@ export default defineConfig((config) => {
     },
     server: {
       allowedHosts: [
-        'qw0cgk8wc8owso8o4s04scsk.51.83.71.29.sslip.io', // Coolify host
+        'qw0cgk8wc8owso8o4s04scsk.51.83.71.29.sslip.io',
         'localhost',
         '127.0.0.1',
       ],
     },
     resolve: {
       alias: {
-        path: 'path-browserify', // For istextorbinary
-        // Ensure React uses production runtime
+        path: 'path-browserify',
         'react/jsx-dev-runtime': 'react/jsx-runtime',
-        'react-dom': 'react-dom/profiling', // Use profiling in production for Remix
       },
     },
-    // Optimize SSR for production
     ssr: {
-      noExternal: ['react', 'react-dom', '@remix-run/react'], // Bundle these for SSR
-      external: [], // Avoid externalizing critical modules
+      noExternal: ['react', 'react-dom', '@remix-run/react'],
     },
   };
 });
