@@ -6,10 +6,8 @@ WORKDIR /app
 # Install dependencies (this step is cached as long as the dependencies don't change)
 COPY package.json pnpm-lock.yaml ./
 
-#RUN npm install -g corepack@latest
-
-#RUN corepack enable pnpm && pnpm install
-RUN npm install -g pnpm && pnpm install
+# Install pnpm globally
+RUN npm install -g pnpm@9.15.9 && pnpm install
 
 # Copy the rest of your app's source code
 COPY . .
@@ -48,23 +46,25 @@ ENV WRANGLER_SEND_METRICS=false \
     TOGETHER_API_BASE_URL=${TOGETHER_API_BASE_URL} \
     AWS_BEDROCK_CONFIG=${AWS_BEDROCK_CONFIG} \
     VITE_LOG_LEVEL=${VITE_LOG_LEVEL} \
-    DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX}\
-    RUNNING_IN_DOCKER=true
+    DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
+    RUNNING_IN_DOCKER=true \
+    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin
 
 # Pre-configure wrangler to disable metrics
 RUN mkdir -p /root/.config/.wrangler && \
     echo '{"enabled":false}' > /root/.config/.wrangler/metrics.json
 
-RUN pnpm run build
+# Increase Node.js memory limit for the build step
+RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm run build
 
-CMD [ "pnpm", "run", "dockerstart"]
+CMD ["pnpm", "run", "dockerstart"]
 
 # Development image
 FROM base AS bolt-ai-development
 
 # Define the same environment variables for development
 ARG GROQ_API_KEY
-ARG HuggingFace 
+ARG HuggingFace_API_KEY
 ARG OPENAI_API_KEY
 ARG ANTHROPIC_API_KEY
 ARG OPEN_ROUTER_API_KEY
@@ -88,8 +88,9 @@ ENV GROQ_API_KEY=${GROQ_API_KEY} \
     TOGETHER_API_BASE_URL=${TOGETHER_API_BASE_URL} \
     AWS_BEDROCK_CONFIG=${AWS_BEDROCK_CONFIG} \
     VITE_LOG_LEVEL=${VITE_LOG_LEVEL} \
-    DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX}\
-    RUNNING_IN_DOCKER=true
+    DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
+    RUNNING_IN_DOCKER=true \
+    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin
 
-RUN mkdir -p ${WORKDIR}/run
+RUN mkdir -p /app/run
 CMD pnpm run dev --host
