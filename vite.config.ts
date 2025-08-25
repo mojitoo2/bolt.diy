@@ -23,14 +23,14 @@ export default defineConfig((config) => {
     },
     plugins: [
       nodePolyfills({
-        include: ['buffer', 'process', 'util', 'stream', 'path'], // Added 'path' for istextorbinary
+        include: ['buffer', 'process', 'util', 'stream', 'path'], // Includes path for istextorbinary
         globals: {
           Buffer: true,
           process: true,
           global: true,
         },
         protocolImports: true,
-        exclude: ['child_process', 'fs'], // Removed 'path' from exclude
+        exclude: ['child_process', 'fs'], // Exclude unnecessary modules
       }),
       {
         name: 'buffer-polyfill',
@@ -51,6 +51,10 @@ export default defineConfig((config) => {
           v3_relativeSplatPath: true,
           v3_throwAbortReason: true,
           v3_lazyRouteDiscovery: true,
+        },
+        // Ensure production JSX runtime
+        ssr: {
+          noExternal: ['react', 'react-dom', '@remix-run/react'], // Prevent externalizing React modules
         },
       }),
       UnoCSS(),
@@ -74,15 +78,23 @@ export default defineConfig((config) => {
     },
     server: {
       allowedHosts: [
-        'qw0cgk8wc8owso8o4s04scsk.51.83.71.29.sslip.io', // Allow Coolify's host
-        'localhost', // Allow local development
-        '127.0.0.1', // Allow local IP
+        'qw0cgk8wc8owso8o4s04scsk.51.83.71.29.sslip.io', // Coolify host
+        'localhost',
+        '127.0.0.1',
       ],
     },
     resolve: {
       alias: {
-        path: 'path-browserify', // Alias for istextorbinary compatibility
+        path: 'path-browserify', // For istextorbinary
+        // Ensure React uses production runtime
+        'react/jsx-dev-runtime': 'react/jsx-runtime',
+        'react-dom': 'react-dom/profiling', // Use profiling in production for Remix
       },
+    },
+    // Optimize SSR for production
+    ssr: {
+      noExternal: ['react', 'react-dom', '@remix-run/react'], // Bundle these for SSR
+      external: [], // Avoid externalizing critical modules
     },
   };
 });
