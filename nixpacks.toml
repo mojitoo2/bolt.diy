@@ -1,0 +1,13 @@
+# nixpacks.toml
+[phases.build]
+dependsOn = ["setup", "install"]
+cmd = "NODE_OPTIONS=--max-old-space-size=8192 pnpm run build"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.install]
+cmd = "npm install -g corepack@0.24.1 && corepack enable && pnpm install --frozen-lockfile"
+
+[start]
+cmd = "pnpm run dockerstart"
