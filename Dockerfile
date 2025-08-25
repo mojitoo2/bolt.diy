@@ -6,8 +6,8 @@ WORKDIR /app
 # Install dependencies (this step is cached as long as the dependencies don't change)
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm globally
-RUN npm install -g pnpm@9.15.9 && pnpm install
+# Install corepack and enable pnpm to match Nixpacks
+RUN npm install -g corepack@0.24.1 && corepack enable && pnpm install --frozen-lockfile
 
 # Copy the rest of your app's source code
 COPY . .
@@ -48,14 +48,15 @@ ENV WRANGLER_SEND_METRICS=false \
     VITE_LOG_LEVEL=${VITE_LOG_LEVEL} \
     DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
     RUNNING_IN_DOCKER=true \
-    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin
+    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin \
+    NODE_OPTIONS=--max-old-space-size=8192
 
 # Pre-configure wrangler to disable metrics
 RUN mkdir -p /root/.config/.wrangler && \
     echo '{"enabled":false}' > /root/.config/.wrangler/metrics.json
 
-# Increase Node.js memory limit for the build step
-RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm run build
+# Build with increased memory limit
+RUN NODE_OPTIONS=--max-old-space-size=8192 pnpm run build
 
 CMD ["pnpm", "run", "dockerstart"]
 
@@ -90,7 +91,8 @@ ENV GROQ_API_KEY=${GROQ_API_KEY} \
     VITE_LOG_LEVEL=${VITE_LOG_LEVEL} \
     DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
     RUNNING_IN_DOCKER=true \
-    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin
+    NIXPACKS_PATH=/app/node_modules/.bin:/usr/local/bin:/usr/bin:/bin \
+    NODE_OPTIONS=--max-old-space-size=8192
 
 RUN mkdir -p /app/run
 CMD pnpm run dev --host
